@@ -1,0 +1,32 @@
+app:
+  name: 'glo-profile-service-service'
+  port: '80'
+  version: '1.0'
+  mobile-version: '1.0.2'
+
+log:
+  env: 'dev'
+  level: 'debug'
+
+cloud-sql:
+  dbname: "Tungngern"
+  gormhost: "(35.247.187.21:3306)"
+  username: 'lottodba'
+  password: 'P@ssw0rd'
+  max-idle-conns: 100
+  max-open-conns: 100
+  max-life-time-minutes: 5
+
+redis:
+  host : "127.0.0.1"
+  port: "6379"
+  password: ""
+  database: "0"
+  poolMaxIdle : 8
+  poolMaxActive: 16
+
+aesgcm:
+  key1: "11111111111111111101111111111111"
+
+jwt:
+  key1: "goerm6mvkid6"

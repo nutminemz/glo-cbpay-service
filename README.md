@@ -1,1 +1,1 @@
-# glo-cbpay-service
+# Merchant QR

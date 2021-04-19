@@ -1,0 +1,94 @@
+# Default values for helm.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: swr.ap-southeast-2.myhuaweicloud.com/bookme/comment
+  tag: dev
+  pullPolicy: Always
+
+imagePullSecrets:
+  - name: default-secret
+nameOverride: ""
+fullnameOverride: "comment-service"
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: false
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name:
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: NodePort
+  port: 80
+  nodePort: 32485
+  default:
+    port: 80
+    name: default
+    target: 80
+ingress:
+  enabled: false
+  annotations: {}
+  hosts:
+    - host: chart-example.local
+      paths: []
+  tls: []
+resources:
+  limits:
+    cpu: 250m 
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+security:
+  hash:
+    salt: fcd27e75
+  cacheExpire: 10 #min
+
+reserve:
+  timeout: 10 #minute
+configmap:
+  app:
+    name: 'comment'
+    port: '80'
+
+  log:
+   env: 'dev'
+   level: 'debug'
+
+  cloud-sql:
+    dbname: "bookme"
+    gormhost: "(159.138.237.10:3306)"
+    max-idle-conns: 10
+    max-open-conns: 10
+    max-life-time-minutes: 5
+    username: 'bookmedba'
+    password: 'P@00word'
+    profile_image_query: 'SELECT DISTINCT u.user_id, u.profile_image FROM user_profile u, booking b, package p, service s WHERE s.service_id = ? AND b.user_id = u.user_id AND b.package_id = p.package_id AND s.service_id = p.service_id'
+
+  elastic:
+    host: 'http://192.168.0.43:9200'
+    username: 'elastic'
+    password: 'changeme'
+    index: 'comment'
+    search_query: '{"sort": [{"_doc": {"order": "desc"}}],"size": 2,"aggs": {"avg_rate": { "avg": { "field": "rate" } }},"query": {"query_string":{"query": %v,"fields": ["service_id"]}}}'
+    scan_query: '{"sort": [{"_doc": {"order": "desc"}}],"size": 1000,"query": {"query_string":{"query": %v,"fields": ["service_id"]}}}'
+
+    
