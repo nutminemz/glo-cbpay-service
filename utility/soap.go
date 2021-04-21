@@ -13,88 +13,6 @@ import (
 	"gitlab.com/firstkungz/log-go"
 )
 
-var getTemplatePaymentAddPayment = `
-<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ws="http://ws.regbill.cbpay.kcs.com/">
-  <soapenv:Header/>
-  <soapenv:Body>
-    <ws:BillPaymentAdd>
-      <!--Optional:-->
-      <BillPaymentAddRequest>
-        <bankCD>6</bankCD>
-        <brCD>0</brCD>
-        <chID>8</chID>
-        <code>0200.500000</code>
-        <currency>THB</currency>
-        <dtm>{{.Dtm}}</dtm>
-        <language>th</language>
-        <password/>
-        <termID>mKTB</termID>
-        <txRef>mKTB.{{.TxRef}}</txRef>
-        <userID>0</userID>
-        <param>
-          <dtc>0</dtc>
-          <payeeCode>91865</payeeCode>
-          <payment>
-            <comAmt>35200.0</comAmt>
-            <comFeeAmt>10</comFeeAmt>
-            <comFeeAmtParam>
-              <total>10</total>
-            </comFeeAmtParam>
-            <commitFlg>Y</commitFlg>
-            <cusAcct>{{.CusAcct}}</cusAcct>
-            <cusAmt>35200.0</cusAmt>
-            <effFlg>Y</effFlg>
-            <pmtDtm>{{.Dtm}}</pmtDtm>
-            <pmtRef>.{{.TxRef}}</pmtRef>
-          </payment>
-          <ref1>{{.Ref1}}</ref1>
-          <ref2>5</ref2>
-          <ref3>{{.Cid}}</ref3>
-          <revFlg>N</revFlg>
-          <tCmt/>
-        </param>
-      </BillPaymentAddRequest>
-    </ws:BillPaymentAdd>
-  </soapenv:Body>
-</soapenv:Envelope>`
-
-var getTemplatePaymentInquiry = `
-<x:Envelope xmlns:x="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ws="http://ws.payment.cbpay.kcs.com/">
-    <x:Header/>
-    <x:Body>
-        <ws:inquiryCoses>
-            <request>
-                <bankCD>6</bankCD>
-                <brCD>0</brCD>
-                <chID>8</chID>
-                <code>0200.500000</code>
-                <dtm>{{.Dtm}}</dtm>
-                <termID>mKTB</termID>
-                <txRef>mKTB.{{.TxRef}}</txRef>
-                <userID>1200534</userID>
-                <param>
-                    <amt1>0</amt1>
-                    <amt2>0</amt2>
-                    <amt3>0</amt3>
-                    <amt4>0</amt4>
-                    <channel>8</channel>
-                    <expiryDate>{{.TranDate}}</expiryDate>
-                    <fromAcctId></fromAcctId>
-                    <fromBankCd></fromBankCd>
-                    <msgLength>0</msgLength>
-                    <ref1>{{.CusAcct}}</ref1>
-                    <rqUID>0000</rqUID>
-                    <servProviderId>91865</servProviderId>
-                    <systemId>0000</systemId>
-                    <tranCode>00000</tranCode>
-                    <tranDate>{{.TranDate}}</tranDate>
-                    <tranTime>{{.TranTime}}</tranTime>
-                </param>
-            </request>
-        </ws:inquiryCoses>
-    </x:Body>
-</x:Envelope>`
-
 type RequestPayment struct {
 	CusAcct string
 	Dtm     string
@@ -335,8 +253,92 @@ func CallSOAPClientSteps(acc string, txRef string, cid string, tel string) (stri
 			fmt.Println("Problem occurred in making a SOAP call")
 			return "", "", err
 		}
+		log.Print(response.SoapBody.Resp.Response.Result.Info)
+
 		return response.SoapBody.Resp.Response.Code, response.SoapBody.Resp.Response.Info, nil
 	}
 	return code, responseInq.SoapBody.Resp.Response.Info, err
 
 }
+
+var getTemplatePaymentAddPayment = `
+<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ws="http://ws.regbill.cbpay.kcs.com/">
+  <soapenv:Header/>
+  <soapenv:Body>
+    <ws:BillPaymentAdd>
+      <!--Optional:-->
+      <BillPaymentAddRequest>
+        <bankCD>6</bankCD>
+        <brCD>0</brCD>
+        <chID>8</chID>
+        <code>0200.500000</code>
+        <currency>THB</currency>
+        <dtm>{{.Dtm}}</dtm>
+        <language>th</language>
+        <password/>
+        <termID>mKTB</termID>
+        <txRef>mKTB.{{.TxRef}}</txRef>
+        <userID>0</userID>
+        <param>
+          <dtc>0</dtc>
+          <payeeCode>91865</payeeCode>
+          <payment>
+            <comAmt>35200.0</comAmt>
+            <comFeeAmt>10</comFeeAmt>
+            <comFeeAmtParam>
+              <total>10</total>
+            </comFeeAmtParam>
+            <commitFlg>Y</commitFlg>
+            <cusAcct>{{.CusAcct}}</cusAcct>
+            <cusAmt>35200.0</cusAmt>
+            <effFlg>Y</effFlg>
+            <pmtDtm>{{.Dtm}}</pmtDtm>
+            <pmtRef>.{{.TxRef}}</pmtRef>
+          </payment>
+          <ref1>{{.Ref1}}</ref1>
+          <ref2>5</ref2>
+          <ref3>{{.Cid}}</ref3>
+          <revFlg>N</revFlg>
+          <tCmt/>
+        </param>
+      </BillPaymentAddRequest>
+    </ws:BillPaymentAdd>
+  </soapenv:Body>
+</soapenv:Envelope>`
+
+var getTemplatePaymentInquiry = `
+<x:Envelope xmlns:x="http://schemas.xmlsoap.org/soap/envelope/" xmlns:ws="http://ws.payment.cbpay.kcs.com/">
+    <x:Header/>
+    <x:Body>
+        <ws:inquiryCoses>
+            <request>
+                <bankCD>6</bankCD>
+                <brCD>0</brCD>
+                <chID>8</chID>
+                <code>0200.500000</code>
+                <dtm>{{.Dtm}}</dtm>
+                <termID>mKTB</termID>
+                <txRef>mKTB.{{.TxRef}}</txRef>
+                <userID>1200534</userID>
+                <param>
+                    <amt1>0</amt1>
+                    <amt2>0</amt2>
+                    <amt3>0</amt3>
+                    <amt4>0</amt4>
+                    <channel>8</channel>
+                    <expiryDate>{{.TranDate}}</expiryDate>
+                    <fromAcctId></fromAcctId>
+                    <fromBankCd></fromBankCd>
+                    <msgLength>0</msgLength>
+                    <ref1>{{.CusAcct}}</ref1>
+                    <rqUID>0000</rqUID>
+                    <servProviderId>91865</servProviderId>
+                    <systemId>0000</systemId>
+                    <tranCode>00000</tranCode>
+                    <tranDate>{{.TranDate}}</tranDate>
+                    <tranTime>{{.TranTime}}</tranTime>
+                </param>
+            </request>
+        </ws:inquiryCoses>
+    </x:Body>
+</x:Envelope>`
