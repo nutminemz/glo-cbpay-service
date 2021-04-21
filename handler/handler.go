@@ -99,3 +99,16 @@ func GetSoldOutFlag(c echo.Context) error {
 	resp := service.GetSoldOutFlag()
 	return c.JSONPretty(http.StatusOK, resp, "")
 }
+
+func AddPayment(c echo.Context) error {
+	tokenAuth, err := utility.ExtractTokenMetadata(c.Request())
+	if err != nil {
+		return c.JSONPretty(http.StatusUnauthorized, err, "")
+	}
+	userId, err := utility.FetchAuth(tokenAuth)
+	if err != nil {
+		return c.JSONPretty(http.StatusUnauthorized, err, "")
+	}
+	resp := service.AddPayment(userId)
+	return c.JSONPretty(http.StatusOK, resp, "")
+}

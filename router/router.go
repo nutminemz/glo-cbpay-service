@@ -52,5 +52,7 @@ func InitRoute() *echo.Echo {
 	api.GET("/periodday", handler.GetPeriodDay)
 	api.GET("/soldout", handler.GetSoldOutFlag)
 
+	api.POST("/addpayment", handler.AddPayment)
+
 	return api
 }

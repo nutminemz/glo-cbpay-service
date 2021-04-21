@@ -38,6 +38,7 @@ func main() {
 	r := router.InitRoute()
 	service.InitRedisPoolService()
 	utility.AESLoadKey()
+	// utility.CallSOAPClientSteps()
 	log.Info("started application listening on port " + viper.GetString("app.port"))
 	r.Logger.Fatal(r.Start(":" + viper.GetString("app.port")))
 }
