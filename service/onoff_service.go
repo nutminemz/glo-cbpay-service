@@ -9,6 +9,7 @@ import (
 
 func GetOnOffService() model.OnOffResponse {
 	redisKey := fmt.Sprintf(keyRedisOnOff)
+	// force turn on waiting for TODO kafka
 	err := redisPool.SetRedis(redisKey, "Y")
 	re, err := redisPool.GetRedis(redisKey)
 	if err != nil {

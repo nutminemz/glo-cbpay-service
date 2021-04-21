@@ -32,15 +32,17 @@ func AddPayment(uuid string) model.AddPaymentResponse {
 	cid, _ := utility.Decrypt([]byte(res.Cid))
 	tel, _ := utility.Decrypt([]byte(res.MobileNo))
 
-	code, info, err := utility.CallSOAPClientSteps(string(acc), txRef, string(cid), string(tel))
+	moDes := model.ResultBodyPayment{}
+	code, info, moDes, err := utility.CallSOAPClientSteps(string(acc), txRef, string(cid), string(tel))
 	qrs := model.AddPaymentResponse{}
 	if err != nil {
 		qrs.Code = model.StatusGenericError
 		qrs.Message = err.Error()
 	}
-	if code == "0000" {
+	if code == "00000" {
 		qrs.Code = model.StatusSuccess
 		qrs.Message = "success"
+		qrs.Data = moDes
 	} else {
 		qrs.Code = model.StatusGenericError
 		qrs.Message = info

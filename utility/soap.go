@@ -5,15 +5,16 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"text/template"
 	"time"
 
+	"api.inno/glo-profile-service/model"
 	_ "github.com/jinzhu/gorm/dialects/mysql"
-	"gitlab.com/firstkungz/log-go"
 )
 
-type RequestPayment struct {
+type requestPayment struct {
 	CusAcct string
 	Dtm     string
 	Tel     string
@@ -22,7 +23,7 @@ type RequestPayment struct {
 	Ref1    string
 }
 
-type RequestInquiry struct {
+type requestInquiry struct {
 	CusAcct  string
 	Dtm      string
 	TxRef    string
@@ -30,65 +31,54 @@ type RequestInquiry struct {
 	TranTime string
 }
 
-type ResponsePayment struct {
-	XMLName  xml.Name `xml:"http://schemas.xmlsoap.org/soap/envelope/ Envelope"`
-	SoapBody *SOAPBodyPaymentResponse
+func CallSOAPClientSteps(acc string, txRef string, cid string, tel string) (string, string, model.ResultBodyPayment, error) {
+	moDes := model.ResultBodyPayment{}
+	reqInq := populateRequestInquiry(acc, txRef, cid)
+	httpReqInq, err := generateSOAPRequestInquiry(reqInq)
+	if err != nil {
+		fmt.Println("Some problem occurred in inquiry cosses request generation")
+		return "", "", moDes, err
+	}
+	responseInq, err := soapCallInquiry(httpReqInq)
+	if err != nil {
+		fmt.Println("Problem occurred in making a SOAP inquiry cosses call")
+		return "", "", moDes, err
+	}
+	code := responseInq.SoapBody.Resp.Response.Code
+	log.Println(code)
+	if code == "00000" {
+		log.Println(responseInq.SoapBody.Resp.Response.Result.Info)
+		ref1 := responseInq.SoapBody.Resp.Response.Result.Info
+
+		reqPay := populateRequestPayment(acc, txRef, cid, tel, ref1)
+		httpReq, err := generateSOAPRequestPayment(reqPay)
+		if err != nil {
+			fmt.Println("Some problem occurred in billaddpayment request generation")
+			return "", "", moDes, err
+		}
+
+		response, err := soapCallPayment(httpReq)
+		if err != nil {
+			fmt.Println("Problem occurred in making a SOAP billaddpayment call")
+			return "", "", moDes, err
+		}
+		moDes.Cid = response.SoapBody.Resp.Response.Result.Cid
+		moDes.Info = response.SoapBody.Resp.Response.Result.Info
+		moDes.Name = response.SoapBody.Resp.Response.Result.Name
+		moDes.PostDesc = response.SoapBody.Resp.Response.Result.PostDesc
+		log.Print(response.SoapBody.Resp.Response.Result.Info)
+		paymentResCode := response.SoapBody.Resp.Response.Code
+
+		return paymentResCode, response.SoapBody.Resp.Response.Info, moDes, nil
+	}
+	inqErrorTxt := responseInq.SoapBody.Resp.Response.Info
+	return code, inqErrorTxt, moDes, err
 }
 
-type SOAPBodyPaymentResponse struct {
-	XMLName xml.Name `xml:"Body"`
-	Resp    *ResponsePaymentBody
-}
-
-type ResponsePaymentBody struct {
-	XMLName  xml.Name `xml:"BillPaymentAddReturn"`
-	Response *BodyPayment
-}
-
-type BodyPayment struct {
-	XMLName xml.Name `xml:"return"`
-	Code    string   `xml:"code"`
-	Info    string   `xml:"info"`
-	Result  *ResultBodyPayment
-}
-
-type ResultBodyPayment struct {
-	XMLName xml.Name `xml:"result"`
-	Info    string   `xml:"print4"`
-}
-
-/////
-type ResponseInquiry struct {
-	XMLName  xml.Name `xml:"http://schemas.xmlsoap.org/soap/envelope/ Envelope"`
-	SoapBody *SOAPBodyInquiryResponse
-}
-
-type SOAPBodyInquiryResponse struct {
-	XMLName xml.Name `xml:"Body"`
-	Resp    *ResponseInquiryBody
-}
-
-type ResponseInquiryBody struct {
-	XMLName  xml.Name `xml:"inquiryCosesResponse"`
-	Response *BodyInquiry
-}
-
-type BodyInquiry struct {
-	XMLName xml.Name `xml:"return"`
-	Code    string   `xml:"code"`
-	Info    string   `xml:"info"`
-	Result  *ResultBodyInquiry
-}
-
-type ResultBodyInquiry struct {
-	XMLName xml.Name `xml:"cosesPaymentResult"`
-	Info    string   `xml:"print1"`
-}
-
-func populateRequestPayment(acc string, txRef string, cid string, tel string, ref1 string) *RequestPayment {
+func populateRequestPayment(acc string, txRef string, cid string, tel string, ref1 string) *requestPayment {
 
 	currentTime := time.Now()
-	req := RequestPayment{}
+	req := requestPayment{}
 	req.CusAcct = acc
 	req.Dtm = currentTime.Format("02/01/2006 15:04:05")
 	req.Tel = tel
@@ -98,10 +88,10 @@ func populateRequestPayment(acc string, txRef string, cid string, tel string, re
 	return &req
 }
 
-func populateRequestInquiry(acc string, txRef string, cid string) *RequestInquiry {
+func populateRequestInquiry(acc string, txRef string, cid string) *requestInquiry {
 
 	currentTime := time.Now()
-	req := RequestInquiry{}
+	req := requestInquiry{}
 	req.CusAcct = acc
 	req.Dtm = currentTime.Format("02/01/2006 15:04:05")
 	req.TranDate = currentTime.Format("02/01/2006")
@@ -109,7 +99,8 @@ func populateRequestInquiry(acc string, txRef string, cid string) *RequestInquir
 	req.TxRef = txRef
 	return &req
 }
-func generateSOAPRequestPayment(req *RequestPayment) (*http.Request, error) {
+
+func generateSOAPRequestPayment(req *requestPayment) (*http.Request, error) {
 	// Using the var getTemplate to construct request
 	template, err := template.New("InputRequestPayment").Parse(getTemplatePaymentAddPayment)
 	if err != nil {
@@ -142,7 +133,7 @@ func generateSOAPRequestPayment(req *RequestPayment) (*http.Request, error) {
 	return r, nil
 }
 
-func generateSOAPRequestInquiry(req *RequestInquiry) (*http.Request, error) {
+func generateSOAPRequestInquiry(req *requestInquiry) (*http.Request, error) {
 	// Using the var getTemplate to construct request
 	template, err := template.New("InputRequestInquiry").Parse(getTemplatePaymentInquiry)
 	if err != nil {
@@ -175,7 +166,7 @@ func generateSOAPRequestInquiry(req *RequestInquiry) (*http.Request, error) {
 	return r, nil
 }
 
-func soapCallPayment(req *http.Request) (*ResponsePayment, error) {
+func soapCallPayment(req *http.Request) (*model.ResponsePayment, error) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 
@@ -189,7 +180,7 @@ func soapCallPayment(req *http.Request) (*ResponsePayment, error) {
 	}
 	defer resp.Body.Close()
 
-	r := &ResponsePayment{}
+	r := &model.ResponsePayment{}
 	err = xml.Unmarshal(body, &r)
 
 	if err != nil {
@@ -198,7 +189,8 @@ func soapCallPayment(req *http.Request) (*ResponsePayment, error) {
 
 	return r, nil
 }
-func soapCallInquiry(req *http.Request) (*ResponseInquiry, error) {
+
+func soapCallInquiry(req *http.Request) (*model.ResponseInquiry, error) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 
@@ -212,7 +204,7 @@ func soapCallInquiry(req *http.Request) (*ResponseInquiry, error) {
 	}
 	defer resp.Body.Close()
 
-	r := &ResponseInquiry{}
+	r := &model.ResponseInquiry{}
 	err = xml.Unmarshal(body, &r)
 
 	if err != nil {
@@ -220,45 +212,6 @@ func soapCallInquiry(req *http.Request) (*ResponseInquiry, error) {
 	}
 
 	return r, nil
-}
-
-func CallSOAPClientSteps(acc string, txRef string, cid string, tel string) (string, string, error) {
-
-	reqInq := populateRequestInquiry(acc, txRef, cid)
-	httpReqInq, err := generateSOAPRequestInquiry(reqInq)
-	if err != nil {
-		fmt.Println("Some problem occurred in request generation")
-		return "", "", err
-	}
-	responseInq, err := soapCallInquiry(httpReqInq)
-	if err != nil {
-		fmt.Println("Problem occurred in making a SOAP call")
-		return "", "", err
-	}
-	code := responseInq.SoapBody.Resp.Response.Code
-	log.Println(code)
-	if code == "00000" {
-		log.Println(responseInq.SoapBody.Resp.Response.Result.Info)
-		ref1 := responseInq.SoapBody.Resp.Response.Result.Info
-
-		reqPay := populateRequestPayment(acc, txRef, cid, tel, ref1)
-		httpReq, err := generateSOAPRequestPayment(reqPay)
-		if err != nil {
-			fmt.Println("Some problem occurred in request generation")
-			return "", "", err
-		}
-
-		response, err := soapCallPayment(httpReq)
-		if err != nil {
-			fmt.Println("Problem occurred in making a SOAP call")
-			return "", "", err
-		}
-		log.Print(response.SoapBody.Resp.Response.Result.Info)
-
-		return response.SoapBody.Resp.Response.Code, response.SoapBody.Resp.Response.Info, nil
-	}
-	return code, responseInq.SoapBody.Resp.Response.Info, err
-
 }
 
 var getTemplatePaymentAddPayment = `
