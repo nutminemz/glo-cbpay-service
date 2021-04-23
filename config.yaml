@@ -1,5 +1,5 @@
 app:
-  name: 'glo-profile-service-service'
+  name: 'glo-profile-service'
   port: '80'
   version: '1.0'
   mobile-version: '1.0.2'
@@ -9,24 +9,24 @@ log:
   level: 'debug'
 
 cloud-sql:
-  dbname: "Tungngern"
+  dbname: "lotto"
   gormhost: "(35.247.187.21:3306)"
-  username: 'lottodba'
+  username: 'lotto'
   password: 'P@ssw0rd'
   max-idle-conns: 100
   max-open-conns: 100
   max-life-time-minutes: 5
 
 redis:
-  host : "127.0.0.1"
+  host : "10.98.32.11"
   port: "6379"
-  password: ""
+  password: "9e6c5928-3453-4bc0-b65e-33513ae9d082"
   database: "0"
   poolMaxIdle : 8
   poolMaxActive: 16
 
 aesgcm:
-  key1: "11111111111111111101111111111111"
+  key1: "Mf65J46OFeNKCIYWTVjG8Fo61vHcYMqY"
 
 jwt:
   key1: "goerm6mvkid6"
