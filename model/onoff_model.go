@@ -18,5 +18,9 @@ type Constants struct {
 }
 
 type ServiceOff struct {
-	ServiceOff bool `json:"service_off,omitempty"`
+	ServiceOff bool   `json:"service_off"`
+	SoldOut    bool   `json:"sold_out"`
+	Round      string `json:"round,omitempty"`
+	Period     string `json:"period,omitempty"`
+	Type       string `json:"type,omitempty"`
 }

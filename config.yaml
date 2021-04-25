@@ -18,9 +18,9 @@ cloud-sql:
   max-life-time-minutes: 5
 
 redis:
-  host : "10.98.32.11"
+  host : "localhost"
   port: "6379"
-  password: "9e6c5928-3453-4bc0-b65e-33513ae9d082"
+  password: ""
   database: "0"
   poolMaxIdle : 8
   poolMaxActive: 16

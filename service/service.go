@@ -11,10 +11,17 @@ import (
 
 var redisPool *utility.RedisPool
 
-var keyRedisOnOff = "ONOFF"
 var keyRedisProfile = "PL|%s"
-var keyRedisPin = "PI|%s"
-var keyRedisAppVersion = "APPVERSION"
+
+var keyRedisServiceOff = "LOTTO_PERIOD_OFF"
+var keyRedisPrice = "LOTTO_UNIT_PRICE"
+var keyRedisPeriodDay = "LOTTO_PERIOD_SELL"
+var keyRedisPeriodTime = "LOTTO_NORMAL_TIME_OPEN"
+
+var keyRedisPeriodRound1 = "DTM_ROUND1"
+var keyRedisPeriodRound2 = "DTM_ROUND2"
+
+var keyRedisSoldOutFlag = "SOLD_OUT_FLAG"
 
 func InitRedisPoolService() {
 	log.Info("Initiating Redis Pool")
